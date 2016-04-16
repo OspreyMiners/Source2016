@@ -44,6 +44,7 @@ const int RackEncoderB = 31;
 // Global Variables
 //Current Arrays
 const int currentSensorReadCount= 24;
+float sensitivity = 0.04;
 int index = 0;
 //Digger Relavant Data
 float diggerCurrent[numReadings];// the index of the current reading
@@ -72,14 +73,14 @@ Encoder leftEncoder(LeftEncoderA,LeftEncoderB);
 int currentDigAvg = 0;
 int currentConAvg = 0;
 int linActFeedback = 0;
-String inputString = ""; 
-//Robot Setup 
+String inputString = "";
+//Robot Setup
 void startUpProcedure(){
   //Reserve 16 bytes for input
   inputString.reserve(16);
   //inputs are not set as arduino defaults pins to input
   // Setup Actuators
-  //Drive Motors 
+  //Drive Motors
   pinMode(FWDML, OUTPUT);
   pinMode(FWDMR, OUTPUT);
   pinMode(RWDML, OUTPUT);
@@ -144,7 +145,14 @@ void setup() {
 }
 void loop() {
   //Collect Data
-  //Collect Current Sensors
+  //Collect Current Sensors every 50ms
+  if(millis()%50 == 0){
+    senseDumperCurrent();
+    senseDiggerCurrent();
+    index += 1;
+    if (index >= currentSensorReadCount)
+        index = 0;
+  }
     //Check Within Bounds
   //Report Data
     //Report Quad Encoders
@@ -154,52 +162,28 @@ void loop() {
 //End Of Main
 //Serial TX
 void collectAndReport(){
-  
+
 }
 //Current Sensor Collect
 float senseDumperCurrent(){
-  float sensitivity = 0.04 
   //Digger Relavant Data
   totalDumper = totalDumper - dumperCurrent[index];
-  dumperCurrent[index] = analogRead(CurrentDig);
+  dumperCurrent[index] = analogRead(CurrentCon);
   dumperCurrent[index] = (dumperCurrent[index]-512)*5/1024/sensitivity-sensitivity;
-  totalDumper = totalDumper + diggerCurrent[index];
-  if (index >= numReadings)              
-      index = 0;                           
-  avgDigger = totalDumper/currentSensorReadCount;
-  currentValDigger = avgDigger;
-  return currentValDigger;
-  float diggerCurrent[numReadings];// the index of the current reading
-  float totalDigger = 0;           // the running total
-  float avgDigger = 0;             // the average
-  float currentValDigger = 0;
-  //Dumper Relavant Data
-  float dumperCurrent[numReadings];
-  float totalDumper = 0;           // the running total
-  float avgDumper = 0;             // the average
-  float currentValDumper = 0;
+  totalDumper = totalDumper + dumperCurrent[index];
+  avgDumper = totalDumper/currentSensorReadCount;
+  currentValDumper = avgDumper;
+  return currentValDumper;
 }
 float senseDiggerCurrent(){
-  float sensitivity = 0.04 
   //Digger Relavant Data
-  totalDumper = totalDumper - diggerCurrent[index];
-  diggerCurrent[index] = analogRead(CurrentCon);
+  totalDigger = totalDigger - diggerCurrent[index];
+  diggerCurrent[index] = analogRead(CurrentDig);
   diggerCurrent[index] = (diggerCurrent[index]-512)*5/1024/sensitivity-sensitivity;
-  totalDumper = totalDumper + diggerCurrent[index];
-  if (index >= currentSensorReadCount)              
-      index = 0;                          
+  totalDigger = totalDigger + diggerCurrent[index];
   avgDigger = totalDigger/currentSensorReadCount;
-  currentValDigger = avgDigger;
-  
-  float diggerCurrent[numReadings];// the index of the current reading
-  float totalDigger = 0;           // the running total
-  float avgDigger = 0;             // the average
-  float currentValDigger = 0;
-  //Dumper Relavant Data
-  float dumperCurrent[numReadings];
-  float totalDumper = 0;           // the running total
-  float avgDumper = 0;             // the average
-  float currentValDumper = 0;
+  currentValDumper = avgDigger;
+  return currentValDumper;
 }
 //Parser
 void serialEvent() {
@@ -235,7 +219,7 @@ void serialEvent() {
       default:
         Serial.println("Failure:NotValidCommand");
         break;
-      
+
     }
     inputString = "";
     // if the incoming character is a newline, set a flag
@@ -278,11 +262,11 @@ void handleCommandN(String inputString){
   resetRobot();
 }
 void handleCommandP(inputString){
-  float targetAngle = inputString.Substring(1).toInt(); 
+  float targetAngle = inputString.Substring(1).toInt();
   angleDigger(targetAngle);
 }
 void handleCommandD(inputString){
-  float targetDistance = inputString.Substring(1).toInt(); 
+  float targetDistance = inputString.Substring(1).toInt();
   positionDigger(targetDistance);
 }
 void handleCommandL(inputString){

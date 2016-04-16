@@ -61,14 +61,14 @@ Encoder leftEncoder(LeftEncoderA,LeftEncoderB);
 int currentDigAvg = 0;
 int currentConAvg = 0;
 int linActFeedback = 0;
-String inputString = ""; 
-//Robot Setup 
+String inputString = "";
+//Robot Setup
 void startUpProcedure(){
   //Reserve 16 bytes for input
   inputString.reserve(16);
   //inputs are not set as arduino defaults pins to input
   // Setup Actuators
-  //Drive Motors 
+  //Drive Motors
   pinMode(FWDML, OUTPUT);
   pinMode(FWDMR, OUTPUT);
   pinMode(RWDML, OUTPUT);
@@ -143,6 +143,10 @@ void loop() {
   delay(1000);
 }
 //End Of Main
+//Serial TX
+void collectAndReport(){
+
+}
 //Parser
 void serialEvent() {
   while (Serial.available()) {
@@ -177,7 +181,7 @@ void serialEvent() {
       default:
         Serial.println("Failure:NotValidCommand");
         break;
-      
+
     }
     inputString = "";
     // if the incoming character is a newline, set a flag
@@ -197,8 +201,58 @@ double angleReadOut(int value){
 }
 //Control Functions
 //Abstraction Functions
+void handleCommandW(String inputString){
+  switch(inputString.charAt(1)){
+    case 'A':
+      driveMode = 0;
+      break;
+    case 'F':
+      driveMode = 1;
+      break;
+    case 'R':
+      driveMode = 2;
+      break;
+    default :
+      Serial.println("Failure: Invalid Drive Mode");
+      break;
+  }
+}
+void handleCommandH(String inputString){
+  haltRobot();
+}
 void handleCommandN(String inputString){
   resetRobot();
+}
+void handleCommandP(inputString){
+  float targetAngle = inputString.Substring(1).toInt();
+  angleDigger(targetAngle);
+}
+void handleCommandD(inputString){
+  float targetDistance = inputString.Substring(1).toInt();
+  positionDigger(targetDistance);
+}
+void handleCommandL(inputString){
+  switch(inputString.charAt(1)){
+    case '+':
+      biDirectMotorForward(RearLinearActuator);
+      break;
+    case '-':
+      biDirectMotorReverse(RearLinearActuator);
+      break;
+    default:
+  }
+}
+void handleCommandM(String inputString){
+  float motorPowerRatio = inputString.subString(3).toInt()/100.0;
+  if(inputString.charAt(2) == '-'){
+    motorPowerRatio *= -1;
+  }
+  if(inputString.charAt(1) == '1'){
+    driveRight(motorPowerRatio);
+  }
+  else{
+    driveLeft(motorPowerRatio);
+  }
 }
 void handleCommandC(String inputString){
   //Assume 2nd byte is + or -
@@ -206,8 +260,8 @@ void handleCommandC(String inputString){
   bool all = false;
   switch(inputString.charAt(1)){
     case '+':
-        turnConveyorsOn();
-        break;
+      turnConveyorsOn();
+      break;
     case '-':
       turnConveyorsOff();
       break;

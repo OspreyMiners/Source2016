@@ -26,7 +26,6 @@ const int DiggerMotor = 38;
 // PWM Drive Pins
 const int RightPwmPin = 13;
 const int LeftPwmPin = 12;
-
 // Input
 // Current sensor feedback
 const int CurrentDig = A6;
@@ -42,8 +41,20 @@ const int LeftEncoderA = 32;
 const int LeftEncoderB = 33;
 const int RackEncoderA = 26;
 const int RackEncoderB = 31;
-
 // Global Variables
+//Current Arrays
+const int currentSensorReadCount= 24;
+int index = 0;
+//Digger Relavant Data
+float diggerCurrent[numReadings];// the index of the current reading
+float totalDigger = 0;           // the running total
+float avgDigger = 0;             // the average
+float currentValDigger = 0;
+//Dumper Relavant Data
+float dumperCurrent[numReadings];
+float totalDumper = 0;           // the running total
+float avgDumper = 0;             // the average
+float currentValDumper = 0;
 //Actuator Variable Setup
 //Drive Channels
 Servo rightDrive;
@@ -61,14 +72,14 @@ Encoder leftEncoder(LeftEncoderA,LeftEncoderB);
 int currentDigAvg = 0;
 int currentConAvg = 0;
 int linActFeedback = 0;
-String inputString = "";
-//Robot Setup
+String inputString = ""; 
+//Robot Setup 
 void startUpProcedure(){
   //Reserve 16 bytes for input
   inputString.reserve(16);
   //inputs are not set as arduino defaults pins to input
   // Setup Actuators
-  //Drive Motors
+  //Drive Motors 
   pinMode(FWDML, OUTPUT);
   pinMode(FWDMR, OUTPUT);
   pinMode(RWDML, OUTPUT);
@@ -99,6 +110,10 @@ void startUpProcedure(){
   //bind limit switch
   attachInterrupt(digitalPinToInterrupt(LimitSwitchPin), stopRack, HIGH);
   prepDigger();
+  for (int thisReading = 0; thisReading < currentSensorReadCount; thisReading++){
+    dumperCurrent[thisReading] = 0;
+    diggerCurrent[thisReading] = 0;
+  }
 }
 void haltRobot(){
   noInterrupts();
@@ -119,33 +134,72 @@ void resetRobot(){
   Serial.println("O:");
 }
 void prepDigger(){
-  biDirectMotorReverse(FrontLinearActuator);
+  angleDigger(10);
   biDirectMotorReverse(RackPinionMotor);
 }
 //Main code
 void setup() {
-  rightDrive.begin(RightPwmPin);
-  leftDrive.begin(LeftPwmPin);
   Serial.begin(9600);
+  startUpProcedure();
 }
 void loop() {
-  rightDrive.write(1,1000);
-  leftDrive.write(1,1000);
-  Serial.println(0);
-  delay(1000);
-  rightDrive.write(1,1500);
-  leftDrive.write(1,1500);
-  Serial.println(1024);
-  delay(1000);
-  rightDrive.write(1,2000);
-  leftDrive.write(1,2000);
-  Serial.println(2047);
-  delay(1000);
+  //Collect Data
+  //Collect Current Sensors
+    //Check Within Bounds
+  //Report Data
+    //Report Quad Encoders
+  //Motor PID Loop
+   //apply PI loop
 }
 //End Of Main
 //Serial TX
 void collectAndReport(){
-
+  
+}
+//Current Sensor Collect
+float senseDumperCurrent(){
+  float sensitivity = 0.04 
+  //Digger Relavant Data
+  totalDumper = totalDumper - dumperCurrent[index];
+  dumperCurrent[index] = analogRead(CurrentDig);
+  dumperCurrent[index] = (dumperCurrent[index]-512)*5/1024/sensitivity-sensitivity;
+  totalDumper = totalDumper + diggerCurrent[index];
+  if (index >= numReadings)              
+      index = 0;                           
+  avgDigger = totalDumper/currentSensorReadCount;
+  currentValDigger = avgDigger;
+  return currentValDigger;
+  float diggerCurrent[numReadings];// the index of the current reading
+  float totalDigger = 0;           // the running total
+  float avgDigger = 0;             // the average
+  float currentValDigger = 0;
+  //Dumper Relavant Data
+  float dumperCurrent[numReadings];
+  float totalDumper = 0;           // the running total
+  float avgDumper = 0;             // the average
+  float currentValDumper = 0;
+}
+float senseDiggerCurrent(){
+  float sensitivity = 0.04 
+  //Digger Relavant Data
+  totalDumper = totalDumper - diggerCurrent[index];
+  diggerCurrent[index] = analogRead(CurrentCon);
+  diggerCurrent[index] = (diggerCurrent[index]-512)*5/1024/sensitivity-sensitivity;
+  totalDumper = totalDumper + diggerCurrent[index];
+  if (index >= currentSensorReadCount)              
+      index = 0;                          
+  avgDigger = totalDigger/currentSensorReadCount;
+  currentValDigger = avgDigger;
+  
+  float diggerCurrent[numReadings];// the index of the current reading
+  float totalDigger = 0;           // the running total
+  float avgDigger = 0;             // the average
+  float currentValDigger = 0;
+  //Dumper Relavant Data
+  float dumperCurrent[numReadings];
+  float totalDumper = 0;           // the running total
+  float avgDumper = 0;             // the average
+  float currentValDumper = 0;
 }
 //Parser
 void serialEvent() {
@@ -181,7 +235,7 @@ void serialEvent() {
       default:
         Serial.println("Failure:NotValidCommand");
         break;
-
+      
     }
     inputString = "";
     // if the incoming character is a newline, set a flag
@@ -224,11 +278,11 @@ void handleCommandN(String inputString){
   resetRobot();
 }
 void handleCommandP(inputString){
-  float targetAngle = inputString.Substring(1).toInt();
+  float targetAngle = inputString.Substring(1).toInt(); 
   angleDigger(targetAngle);
 }
 void handleCommandD(inputString){
-  float targetDistance = inputString.Substring(1).toInt();
+  float targetDistance = inputString.Substring(1).toInt(); 
   positionDigger(targetDistance);
 }
 void handleCommandL(inputString){
@@ -364,8 +418,8 @@ void angleDigger(float goalAngle){
   //print out to serial hit event and value at
 }
 void positionDigger(float goalLength){
-  float pinionDiameter;
-  int encoderTicksPerTurn;
+  float pinionDiameter = 1.1 ;// inches
+  int encoderTicksPerTurn = 360;
   float errorRange = .125;
   double distance = 3.14 * pinionDiameter / encoderTicksPerTurn * rackEncoder.read();
   while(goalLength + errorRange < distance || goalLength - errorRange > distance){

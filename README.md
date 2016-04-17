@@ -25,7 +25,7 @@ Motors are ordered front to rear.
 
 |Command|Regular Expression |Value  |Purpose|
 |:------|:----------------: |:---:  |-------|
-|S [+-] #  |S[+-]\d{1,3} | + = Digger, - = First Conveyor Motor, # = 0-255 | Tells how many amps in motor circuit|
+|S [+-] #  |S[+-]\d{4,5} | + = Digger, - = First Conveyor Motor, # = 00.00-50.00 | Tells how many amps in motor circuit|
 |E # +/- #  |E\d[+-]\d{1,4} | 1st # = 1-3, 2nd # = 0-9999|Tells how many counts the encoders have turned|
 #### S
 1. Digger Motor

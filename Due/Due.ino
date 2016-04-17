@@ -7,10 +7,10 @@ struct BiMotor{
 //Pin Setup
 //Output
 // Wheel Drive
-const int FWDML = 52;
-const int FWDMR = 51;
-const int RWDML = 50;
-const int RWDMR = 49;
+const int FWDML = 50;
+const int FWDMR = 49;
+const int RWDML = 52;
+const int RWDMR = 51;
 //Conveyors
 const int Con1 = 53;
 const int Con2 = 48;
@@ -42,17 +42,22 @@ const int LeftEncoderB = 33;
 const int RackEncoderA = 26;
 const int RackEncoderB = 31;
 // Global Variables
+//Wheel Drive PID range
+//Define the aggressive and conservative Tuning Parameters
+const int driveRPM = 56;
+double aggKp=4, aggKi=0.2, aggKd=1;
+double consKp=1, consKi=0.05, consKd=0.25;
 //Current Arrays
-const int currentSensorReadCount= 24;
+const int currentSensorReadCount= 20;
 float sensitivity = 0.04;
 int index = 0;
 //Digger Relavant Data
-float diggerCurrent[numReadings];// the index of the current reading
+float diggerCurrent[currentSensorReadCount];// the index of the current reading
 float totalDigger = 0;           // the running total
 float avgDigger = 0;             // the average
 float currentValDigger = 0;
 //Dumper Relavant Data
-float dumperCurrent[numReadings];
+float dumperCurrent[currentSensorReadCount];
 float totalDumper = 0;           // the running total
 float avgDumper = 0;             // the average
 float currentValDumper = 0;
@@ -74,6 +79,7 @@ int currentDigAvg = 0;
 int currentConAvg = 0;
 int linActFeedback = 0;
 String inputString = "";
+char[] currentData = new char[5];
 //Robot Setup
 void startUpProcedure(){
   //Reserve 16 bytes for input
@@ -145,24 +151,51 @@ void setup() {
 }
 void loop() {
   //Collect Data
+  //4.77 in
   //Collect Current Sensors every 50ms
   if(millis()%50 == 0){
+    //Sense Data Points
     senseDumperCurrent();
     senseDiggerCurrent();
+    //Report Data Points
+    reportDumpCurrent(dtostrf(senseDumperCurrent(), 2, 1, currentData));
+    reportDiggCurrent(dtostrf(senseDiggerCurrent(), 2, 1, currentData));
     index += 1;
-    if (index >= currentSensorReadCount)
-        index = 0;
+    if (index >= currentSensorReadCount){
+      index = 0;
+    }
   }
-    //Check Within Bounds
-  //Report Data
-    //Report Quad Encoders
+  //Do left then right PI correction on motors based on Encoders
+  //Prep Report Quad Encoders
   //Motor PID Loop
-   //apply PI loop
+  if(millis()%25 == 0){
+
+  }
+    //Left Pi Correct
+    //Right Pi Correct
+  //Report Data every 1 sec
+  /*At the Linux Server level it will report every 10 sec and log
+    The Client User can accept and log feedback*/
 }
 //End Of Main
-//Serial TX
-void collectAndReport(){
+//report distance traveled so far
 
+//Serial TX
+void reportCurrentAvgs(){
+  //First the Digger then Conveyor 1
+  //Digger
+  int minStringWidthIncDecimalPoint = 2;
+  for(int i = 0; i < currentSensorReadCount;i++){
+    dumperCurrent[i];
+
+  }
+  //Conveyor
+}
+void reportDiggCurrent(String data){
+  Serial.println("S+"+data);
+}
+void reportDumpCurrent(String data){
+  Serial.println("S-"+data);
 }
 //Current Sensor Collect
 float senseDumperCurrent(){
@@ -221,12 +254,8 @@ void serialEvent() {
         break;
 
     }
+    Serial.println("Output:"+inputString);
     inputString = "";
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
-    if (inChar == '\n') {
-      stringComplete = true;
-    }
   }
 }
 //Feedback Functions

@@ -1,73 +1,74 @@
 #include <Servo.h>
 #include <Encoder.h>
-struct BiMotor{
+#include <String.h>
+typedef struct BiMotor{
   int sideA;
   int sideB;
 };
 //Pin Setup
 //Output
 // Wheel Drive
-const int FWDML = 50;
-const int FWDMR = 49;
-const int RWDML = 52;
-const int RWDMR = 51;
+int FWDML = 50;
+int FWDMR = 49;
+int RWDML = 52;
+int RWDMR = 51;
 //Conveyors
-const int Con1 = 53;
-const int Con2 = 48;
-const int Con3 = 47;
-const int Con4 = 46;
-const int Con5 = 45;
+int Con1 = 53;
+int Con2 = 48;
+int Con3 = 47;
+int Con4 = 46;
+int Con5 = 45;
 // Linear Actuator and Rack Pinion
-BiMotor FrontLinearActuator = {44,43};
-BiMotor RearLinearActuator = {42,41};
-BiMotor RackPinionMotor = {40,39};
+struct BiMotor FrontLinearActuator = {44,43};
+struct BiMotor RearLinearActuator = {42,41};
+struct BiMotor RackPinionMotor = {40,39};
 //Digger Motor
-const int DiggerMotor = 38;
+int DiggerMotor = 38;
 // PWM Drive Pins
-const int RightPwmPin = 13;
-const int LeftPwmPin = 12;
+int rightPwmPin = 13;
+int leftPwmPin = 12;
 // Input
 // Current sensor feedback
-const int CurrentDig = A6;
-const int CurrentCon = A7;
+int CurrentDig = A6;
+int CurrentCon = A7;
 // LinearActuator feedback
-const int FLAPotFeedback = A8;
+int FLAPotFeedback = A8;
 // Limit Switch
-const int LimitSwitchPin= 23;
+int LimitSwitchPin= 23;
 // Encoders feedback
-const int RightEncoderA = 24;
-const int RightEncoderB = 25;
-const int LeftEncoderA = 32;
-const int LeftEncoderB = 33;
-const int RackEncoderA = 26;
-const int RackEncoderB = 31;
+int RightEncoderA = 24;
+int RightEncoderB = 25;
+int LeftEncoderA = 32;
+int LeftEncoderB = 33;
+int RackEncoderA = 26;
+int RackEncoderB = 31;
 // Global Variables
 //Wheel Drive PID range
 //Define the aggressive and conservative Tuning Parameters
-const int driveRPM = 56;
+int driveRPM = 56;
 double aggKp=4, aggKi=0.2, aggKd=1;
 double consKp=1, consKi=0.05, consKd=0.25;
 //Current Arrays
 const int currentSensorReadCount= 20;
 float sensitivity = 0.04;
-int index = 0;
+int count = 0;
 //Digger Relavant Data
-float diggerCurrent[currentSensorReadCount];// the index of the current reading
-float totalDigger = 0;           // the running total
-float avgDigger = 0;             // the average
-float currentValDigger = 0;
+double diggerCurrent[currentSensorReadCount];// the index of the current reading
+double totalDigger = 0;           // the running total
+double avgDigger = 0;             // the average
+double currentValDigger = 0;
 //Dumper Relavant Data
-float dumperCurrent[currentSensorReadCount];
-float totalDumper = 0;           // the running total
-float avgDumper = 0;             // the average
-float currentValDumper = 0;
+double dumperCurrent[currentSensorReadCount];
+double totalDumper = 0;           // the running total
+double avgDumper = 0;             // the average
+double currentValDumper = 0;
 //Actuator Variable Setup
 //Drive Channels
 Servo rightDrive;
 Servo leftDrive;
 //Drive Speeds
-float speedRight = 0;
-float speedLeft = 0;
+double speedRight = 0;
+double speedLeft = 0;
 // 0 = all, 1=front, 2=rear
 int driveMode = 0;
 //Motor Feedbacks
@@ -79,9 +80,37 @@ int currentDigAvg = 0;
 int currentConAvg = 0;
 int linActFeedback = 0;
 String inputString = "";
-char[] currentData = new char[5];
+char currentData[5];
 //Robot Setup
 void startUpProcedure(){
+  
+}
+void haltRobot(){
+  noInterrupts();
+  //Halt Drive
+  rightDrive.writeMicroseconds(1500);
+  leftDrive.writeMicroseconds(1500);
+  //stop Conveyors and digger
+  stopConveyorsAndDigger();
+  speedLeft = 0;
+  speedRight = 0;
+  interrupts();
+  inputString = "";
+}
+void resetRobot(){
+  haltRobot();
+  positionDigger(0);
+  angleDigger(10);
+  Serial.println("O:");
+}
+void prepDigger(){
+  angleDigger(10);
+  biDirectMotorReverse(RackPinionMotor);
+}
+//Main code
+void setup() {
+  Serial.begin(9600);
+  //startUpProcedure();
   //Reserve 16 bytes for input
   inputString.reserve(16);
   //inputs are not set as arduino defaults pins to input
@@ -91,10 +120,10 @@ void startUpProcedure(){
   pinMode(FWDMR, OUTPUT);
   pinMode(RWDML, OUTPUT);
   pinMode(RWDMR, OUTPUT);
-  rightDrive.attach(RightPWMPin);
+  rightDrive.attach(rightPwmPin);
   rightDrive.writeMicroseconds(1500);
-  lefttDrive.attach(LeftPWMPin);
-  lefttDrive.writeMicroseconds(1500);
+  leftDrive.attach(leftPwmPin);
+  leftDrive.writeMicroseconds(1500);
   // Initialize All motors to off
   turnMotorOff(FWDML);
   turnMotorOff(FWDMR);
@@ -122,33 +151,6 @@ void startUpProcedure(){
     diggerCurrent[thisReading] = 0;
   }
 }
-void haltRobot(){
-  noInterrupts();
-  //Halt Drive
-  rightDrive.writeMicroseconds(1500);
-  leftDrive.writeMicroseconds(1500);
-  //stop Conveyors and digger
-  stopConveyorsAndDigger();
-  speedLeft = 0;
-  speedRight = 0;
-  interrupts();
-  inputString = "";
-}
-void resetRobot(){
-  haltRobot();
-  positionDigger(0);
-  angleDigger(10);
-  Serial.println("O:");
-}
-void prepDigger(){
-  angleDigger(10);
-  biDirectMotorReverse(RackPinionMotor);
-}
-//Main code
-void setup() {
-  Serial.begin(9600);
-  startUpProcedure();
-}
 void loop() {
   //Collect Data
   //4.77 in
@@ -158,11 +160,11 @@ void loop() {
     senseDumperCurrent();
     senseDiggerCurrent();
     //Report Data Points
-    reportDumpCurrent(dtostrf(senseDumperCurrent(), 2, 1, currentData));
-    reportDiggCurrent(dtostrf(senseDiggerCurrent(), 2, 1, currentData));
-    index += 1;
-    if (index >= currentSensorReadCount){
-      index = 0;
+    reportDumpCurrent(String(senseDumperCurrent(),2));
+    reportDiggCurrent(String(senseDiggerCurrent(),2));
+    count = count + 1;
+    if (count >= currentSensorReadCount){
+      count = 0;
     }
   }
   //Do left then right PI correction on motors based on Encoders
@@ -198,22 +200,22 @@ void reportDumpCurrent(String data){
   Serial.println("S-"+data);
 }
 //Current Sensor Collect
-float senseDumperCurrent(){
+double senseDumperCurrent(){
   //Digger Relavant Data
-  totalDumper = totalDumper - dumperCurrent[index];
-  dumperCurrent[index] = analogRead(CurrentCon);
-  dumperCurrent[index] = (dumperCurrent[index]-512)*5/1024/sensitivity-sensitivity;
-  totalDumper = totalDumper + dumperCurrent[index];
+  totalDumper = totalDumper - dumperCurrent[count];
+  dumperCurrent[count] = analogRead(CurrentCon);
+  dumperCurrent[count] = (dumperCurrent[count]-512)*5/1024/sensitivity-sensitivity;
+  totalDumper = totalDumper + dumperCurrent[count];
   avgDumper = totalDumper/currentSensorReadCount;
   currentValDumper = avgDumper;
   return currentValDumper;
 }
-float senseDiggerCurrent(){
+double senseDiggerCurrent(){
   //Digger Relavant Data
-  totalDigger = totalDigger - diggerCurrent[index];
-  diggerCurrent[index] = analogRead(CurrentDig);
-  diggerCurrent[index] = (diggerCurrent[index]-512)*5/1024/sensitivity-sensitivity;
-  totalDigger = totalDigger + diggerCurrent[index];
+  totalDigger = totalDigger - diggerCurrent[count];
+  diggerCurrent[count] = analogRead(CurrentDig);
+  diggerCurrent[count] = (diggerCurrent[count]-512)*5/1024/sensitivity-sensitivity;
+  totalDigger = totalDigger + diggerCurrent[count];
   avgDigger = totalDigger/currentSensorReadCount;
   currentValDumper = avgDigger;
   return currentValDumper;
@@ -290,15 +292,15 @@ void handleCommandH(String inputString){
 void handleCommandN(String inputString){
   resetRobot();
 }
-void handleCommandP(inputString){
-  float targetAngle = inputString.Substring(1).toInt();
+void handleCommandP(String inputString){
+  double targetAngle = inputString.substring(1).toInt();
   angleDigger(targetAngle);
 }
-void handleCommandD(inputString){
-  float targetDistance = inputString.Substring(1).toInt();
+void handleCommandD(String inputString){
+  double targetDistance = inputString.substring(1).toInt();
   positionDigger(targetDistance);
 }
-void handleCommandL(inputString){
+void handleCommandL(String inputString){
   switch(inputString.charAt(1)){
     case '+':
       biDirectMotorForward(RearLinearActuator);
@@ -307,10 +309,12 @@ void handleCommandL(inputString){
       biDirectMotorReverse(RearLinearActuator);
       break;
     default:
+      Serial.println("Failure: Invalid Mode");
+      break;
   }
 }
 void handleCommandM(String inputString){
-  float motorPowerRatio = inputString.subString(3).toInt()/100.0;
+  double motorPowerRatio = inputString.substring(3).toInt()/100.0;
   if(inputString.charAt(2) == '-'){
     motorPowerRatio *= -1;
   }
@@ -327,14 +331,13 @@ void handleCommandC(String inputString){
   bool all = false;
   switch(inputString.charAt(1)){
     case '+':
-      turnConveyorsOn();
+      startConveyorsAndDigger();
       break;
     case '-':
-      turnConveyorsOff();
+      stopConveyorsAndDigger();
       break;
     default:
       //Assume that charAt(1) is a #
-      {
         String number = inputString.substring(1);
         bool on = false;
         //Check for + or -
@@ -390,9 +393,10 @@ void handleCommandC(String inputString){
               break;
           }
         }
+  }
 }
 
-//Digger funtionality
+//Digger functionality
 void stopConveyorsAndDigger(){
   turnMotorOff(Con1);
   turnMotorOff(Con2);
@@ -413,7 +417,7 @@ void stopRack(){
   biDirectMotorOff(RackPinionMotor);
   rackEncoder.write(0);
 }
-void angleDigger(float goalAngle){
+void angleDigger(double goalAngle){
   double sensorValue = angleReadOut(analogRead(FLAPotFeedback));
   while((goalAngle + .125 < sensorValue ) || (goalAngle - .125 > sensorValue)){
     if(goalAngle > sensorValue){
@@ -430,7 +434,7 @@ void angleDigger(float goalAngle){
   biDirectMotorOff(FrontLinearActuator);
   //print out to serial hit event and value at
 }
-void positionDigger(float goalLength){
+void positionDigger(double goalLength){
   float pinionDiameter = 1.1 ;// inches
   int encoderTicksPerTurn = 360;
   float errorRange = .125;
@@ -460,7 +464,7 @@ void driveRight(float powerRatio){
       break;
   }
   pwmValue =  1500 + 500*powerRatio*multipler;
-  analogWrite(RightPwmPin,pwmValue);
+  analogWrite(rightPwmPin,pwmValue);
 }
 void driveLeft(float powerRatio){
   float multipler;
@@ -474,14 +478,14 @@ void driveLeft(float powerRatio){
       break;
   }
   pwmValue =  1500 + 500*powerRatio*multipler;
-  analogWrite(LeftPwmPin,pwmValue);
+  analogWrite(leftPwmPin,pwmValue);
 }
 // Linear Actuator & Rack Pinion Control Functions
-void biDirectMotorForward(BiMotor motor){
+void biDirectMotorForward(struct BiMotor motor){
   digitalWrite(motor.sideA, HIGH);
   digitalWrite(motor.sideB, LOW);
 }
-void biDirectMotorReverse(BiMotor motor){
+void biDirectMotorReverse(struct BiMotor motor){
   digitalWrite(motor.sideA, LOW);
   digitalWrite(motor.sideB, HIGH);
 }

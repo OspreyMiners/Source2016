@@ -4,9 +4,22 @@ import serial
 import socket
 import sys
 import time
+from time import sleep
 from Queue import Queue, Empty
 from threading import Thread
 # Functions
+''' - parseCommand
+	Takes in the Serial Port and the command
+Forwards the Command as long as it is not something
+the Server has to handle
+'''
+def parseCommand(serialPort,command):
+	if (command and (not command.isspace())):
+		if command[0] == 'T':
+			print "Test"
+		else:
+			serialPort.write(command + '\n')
+	return
 ''' - appendToFile
 	Takes in file name and the input text.
 Using the name it opens file then appends
@@ -17,9 +30,6 @@ def appendToFile(filename, text):
 		now = datetime.datetime.now().strftime("%F,%X,%f")
 		updateFile.write(now + ", '" + text + "'\n")
 	return
-''' - getSerialPortname
-This function gets the first available serial port
-'''
 def getSerialPortname():
 	if sys.platform.startswith('win'):
 		ports = ['COM%s' % (i + 1) for i in range(256)]
@@ -50,13 +60,15 @@ serialPort = getSerialPortname()
 BaudRate = 9600
 microController = serial.Serial(serialPort,BaudRate)
 # Test Grabage
-appendToFile('test.log', 'test data')
-appendToFile('test.log', 'test data 2')
+parseCommand(microController, 'Testing')
+parseCommand(microController, 'C+')
+sleep(1)
+parseCommand(microController, 'WR')
+parseCommand(microController, 'C-')
+sleep(1)
+parseCommand(microController, 'WF')
+parseCommand(microController, 'C+')
+input("hit enter to quit")
 ##Taken Input from commandPrompt
 #epoll = select.epoll()
 #epoll.register(p.stdout.fileno(), select.EPOLLIN)
-''' - spawnCmdLineListener
-Creates a process to read in commands from
-the Command Line.
-'''
-

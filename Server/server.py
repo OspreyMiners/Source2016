@@ -12,7 +12,7 @@ from time import sleep
 from Queue import Queue, Empty
 from threading import Thread
 ###	Custom Depend	###
-import ThreadedServer
+#import ThreadedServer
 ###########################
 ###	FUNCTIONS START	###
 ###	Thread Lock	###
@@ -38,8 +38,7 @@ It writes to the files by spawning threads.
 Reccomended to spawn thread to complete this task.
 '''
 def parseFeedback(textVal):
-	commands = textVal.replace('\n','')
-	print commands
+	commands = textVal.replace('\n','')	
 	if(len(commands) > 0):
 		# Commands looping list
 		while(len(commands) > 0):
@@ -48,15 +47,18 @@ def parseFeedback(textVal):
 			if(re.match("Output:(.*)",cmd)):
 				val = re.match("Output:(.*)",cmd)
 				appendToFile("output.csv", val.group(1))
+				return
 			elif (re.match("Failure:(.*)",cmd)):
 				val = re.match("Failure:(.*)",cmd)
 				appendToFile("failure.csv", val.group(1))
+				return
 			elif (re.match("S([+-])(\d{0,2}.\d{0,2})",cmd)):
 				val = re.match("S([+-])(\d{0,2}.\d{0,2})",cmd)
 				if(val.group(1)=='-'):
 					appendToFile("conveyor.csv", val.group(2))
 				elif(val.group(1)=='+'):
 					appendToFile("digger.csv", val.group(2))
+				return
 			elif (re.match("E([123]{1})([-+]\d{1,4})",cmd)):
 				val = re.match("E([123]{1})([-+]\d{1,4})",cmd)
 				if(val.group(1) == '1'):
@@ -65,6 +67,9 @@ def parseFeedback(textVal):
 					appendToFile("encRight.csv", val.group(2))
 				elif(val.group(1) == '3'):
 					appendToFile("encRack.csv", val.group(2))
+				return
+			else:
+				return
 	return
 ''' - appendToFile
 	Takes in file name and the input text.
@@ -135,7 +140,7 @@ while programOn:
 					programOn = False
 		elif dataS == microController:
 			data = microController.read(serialBuffer).replace('\n','').replace('\r','')
-			print data
-			#parseFeedback(data)
+	#		print data
+			parseFeedback(data)
 			microController.flushInput()
 ###	MAIN END	###

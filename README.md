@@ -27,6 +27,7 @@ Motors are ordered front to rear.
 |:------|:----------------: |:---:  |-------|
 |S [+-] #  |S[+-]\d{4,5} | + = Digger, - = First Conveyor Motor, # = 00.00-50.00 | Tells how many amps in motor circuit|
 |E # +/- #  |E\d[+-]\d{1,4} | 1st # = 1-3, 2nd # = 0-9999|Tells how many counts the encoders have turned|
+|L
 #### S
 1. Digger Motor
 2. First Conveyor
@@ -54,7 +55,7 @@ Motors are ordered front to rear.
 |V #    |V\d{1,2}   |# = 0-99   |Tells how much amps is on the first Conveyor|
 |I #    |I\d{1,2}   |# = 0-99   |Tells how many amps is being pulled on Digger|
 |D #    |D\d{1,3}   |# = 0-105  |Tells how far the rack and pinion is in cm|
-|L #    |L\d{1,4}   |# = 0-9999 |Tells how far the Left Motor is in cm|
+|L #    |L\d{1,4}   |# = 0-9999 |Tells the speed Left Motor is |
 |R #    |R\d{1,4}   |# = 0-9999 |Tells how far the Right Motor is in cm|
 ## Client PC
 ### Client to Server Communication

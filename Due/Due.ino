@@ -489,10 +489,10 @@ void biDirectMotorOff(BiMotor motor){
 }
 // Motor Control Functions
 void turnMotorOff(int pinNumber){
-	digitalWrite(pinNumber, HIGH);
+	digitalWrite(pinNumber, LOW);
 }
 void turnMotorOn(int pinNumber){
-	digitalWrite(pinNumber, LOW);
+	digitalWrite(pinNumber, HIGH);
 }
 // Drive Mode Functions
 void allWheelDriveMode(){

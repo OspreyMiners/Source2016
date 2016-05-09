@@ -16,7 +16,7 @@ from threading import Thread
 ###########################
 ###	FUNCTIONS START	###
 ###	Thread Lock	###
-lock = threading.Lock()
+logAllFileName = datetime.datetime.now().strftime("%d-%m-%Y-%Ilog.csv");
 ''' - parseCommand
 	Takes in the Serial Port and the command
 Forwards the Command as long as it is not something
@@ -28,8 +28,7 @@ def parseCommand(serialPort,command):
 			print "Shutting Off"
 			return False
 		else:
-			now = datetime.datetime.now().strftime("%d-%m-%Y-%Ilog.csv")
-			appendToFile(now , command)
+			appendToFile(logAllFileName , command)
 			serialPort.write(command + '\n')
 	return True
 ''' - parseFeedback
@@ -100,6 +99,9 @@ def getSerialPortname():
 			result.append(port)
 		except (OSError, serial.SerialException):
 			pass
+	if(len(result) == 0):
+		print "Error no Serial Port Detected"
+                sys.exit()
 	return result[0]
 ###	FUNCTIONS END	###
 ###	MAIN START	###

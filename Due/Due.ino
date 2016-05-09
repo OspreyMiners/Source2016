@@ -7,22 +7,22 @@ typedef struct BiMotor{
 //Pin Setup
 //Output
 // Wheel Drive
-int FWDML = 50;
-int FWDMR = 49;
+int FWDML = 53;
+int FWDMR = 51;
 int RWDML = 52;
-int RWDMR = 51;
+int RWDMR = 50;
 //Conveyors
-int Con1 = 53;
-int Con2 = 48;
-int Con3 = 47;
-int Con4 = 46;
-int Con5 = 45;
+int Con1 = 38;
+int Con2 = 39;
+int Con3 = 40;
+int Con4 = 41;
+int Con5 = 49;
 // Linear Actuator and Rack Pinion
-struct BiMotor FrontLinearActuator = {44,43};
-struct BiMotor RearLinearActuator = {42,41};
-struct BiMotor RackPinionMotor = {40,39};
+struct BiMotor FrontLinearActuator = {44,45};
+struct BiMotor RearLinearActuator = {47,48};
+struct BiMotor RackPinionMotor = {42,43};
 //Digger Motor
-int DiggerMotor = 38;
+int DiggerMotor = 46;
 // PWM Drive Pins
 int rightPwmPin = 13;
 int leftPwmPin = 12;
@@ -31,7 +31,7 @@ int leftPwmPin = 12;
 int CurrentDig = A6;
 int CurrentCon = A7;
 // LinearActuator feedback
-int FLAPotFeedback = A8;
+int FLAPotFeedback = A0;
 // Limit Switch
 int LimitSwitchPin= 23;
 // Encoders feedback
@@ -138,6 +138,12 @@ void setup() {
 	pinMode(Con4, OUTPUT);
 	pinMode(Con5, OUTPUT);
 	pinMode(DiggerMotor, OUTPUT);
+	turnMotorOff(Con1);
+	turnMotorOff(Con2);
+  turnMotorOff(Con3);
+  turnMotorOff(Con4);
+  turnMotorOff(Con5);
+  turnMotorOff(DiggerMotor);
 	//Linear Acutators and Rack Pinion Motor
 	pinMode(FrontLinearActuator.sideA, OUTPUT);
 	pinMode(FrontLinearActuator.sideB, OUTPUT);
@@ -145,6 +151,9 @@ void setup() {
 	pinMode(RearLinearActuator.sideB, OUTPUT);
 	pinMode(RackPinionMotor.sideA, OUTPUT);
 	pinMode(RackPinionMotor.sideB, OUTPUT);
+	biDirectMotorOff(FrontLinearActuator);
+  biDirectMotorOff(RearLinearActuator);
+  biDirectMotorOff(RackPinionMotor);
 	//bind limit switch
 	//attachInterrupt(digitalPinToInterrupt(LimitSwitchPin), stopRack, HIGH);
 	//prepDigger();
@@ -489,10 +498,10 @@ void biDirectMotorOff(BiMotor motor){
 }
 // Motor Control Functions
 void turnMotorOff(int pinNumber){
-	digitalWrite(pinNumber, LOW);
+	digitalWrite(pinNumber, HIGH);
 }
 void turnMotorOn(int pinNumber){
-	digitalWrite(pinNumber, HIGH);
+	digitalWrite(pinNumber, LOW);
 }
 // Drive Mode Functions
 void allWheelDriveMode(){

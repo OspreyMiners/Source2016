@@ -6,7 +6,6 @@ typedef struct BiMotor{
 struct BiMotor FrontLinearActuator = {44,45};
 struct BiMotor RearLinearActuator = {47,48};
 struct BiMotor RackPinionMotor = {42,43};
-int linActFeedback = 0;
 int FLAPotFeedback = A0;
 // Linear Actuator & Rack Pinion Control Functions
 void biDirectMotorForward(struct BiMotor motor){
@@ -78,6 +77,7 @@ void setup(){
   biDirectMotorReverse(RackPinionMotor);
   delay(1000);
   biDirectMotorOff(RackPinionMotor);
+  /* If Pot is fixed
   angleDigger(60);
   delay(1000);
   angleDigger(45);
@@ -86,7 +86,7 @@ void setup(){
   delay(1000);
   angleDigger(15);
   delay(1000);
+  */
 }
 void loop(){
 }
-

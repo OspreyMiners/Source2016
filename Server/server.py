@@ -37,7 +37,7 @@ It writes to the files by spawning threads.
 Reccomended to spawn thread to complete this task.
 '''
 def parseFeedback(textVal):
-	commands = textVal.replace('\n','')	
+	commands = textVal.replace('\n','')
 	if(len(commands) > 0):
 		# Commands looping list
 		while(len(commands) > 0):
@@ -94,9 +94,10 @@ def getSerialPortname():
 	result = []
 	for port in ports:
 		try:
-			s = serial.Serial(port)
-			s.close()
-			result.append(port)
+			if port:
+				#s = serial.Serial(port)
+				#s.close()
+				result.append(port)
 		except (OSError, serial.SerialException):
 			pass
 	if(len(result) == 0):
@@ -117,6 +118,8 @@ serverAddress = (serverIP, serverPort)
 serverSocket.bind(serverAddress)
 serverSocket.setblocking(1)
 serverSocket.listen(2)
+#TEst
+print getSerialPortname()
 #Serial Port Configured Microcontroller(Arduino) to Host
 serialPort = getSerialPortname()
 serialBuffer = 64 #bytes

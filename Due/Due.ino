@@ -24,8 +24,8 @@ struct BiMotor RackPinionMotor = {42,43};
 //Digger Motor
 int DiggerMotor = 46;
 // PWM Drive Pins
-int rightPwmPin = 13;
-int leftPwmPin = 12;
+int rightPwmPin = 8;
+int leftPwmPin = 7;
 // Input
 // Current sensor feedback
 int CurrentDig = A6;
@@ -310,6 +310,7 @@ void handleCommandP(String inputString){
     	break;
       case '^':
         biDirectMotorOff(FrontLinearActuator);
+      break;
     	default:
 				double targetAngle = inputString.substring(1).toInt();
 				if (targetAngle != 0) {
@@ -327,7 +328,8 @@ void handleCommandD(String inputString){
         biDirectMotorReverse(RackPinionMotor);
     	break;
       case '^':
-        biDirectMotorOff(FrontLinearActuator);
+        biDirectMotorOff(RackPinionMotor);
+      break;
     	default:
 				double targetDistance = inputString.substring(1).toInt();
 				if (targetDistance != 0) {
@@ -346,10 +348,11 @@ void handleCommandL(String inputString){
     	break;
       case '^':
         biDirectMotorOff(RearLinearActuator);
+      break;
     	default:
         biDirectMotorOff(RearLinearActuator);
     		Serial.println("Failure:Invalid Mode");
-   	break;
+   	  break;
 	}
 }
 void handleCommandM(String inputString){
@@ -464,11 +467,11 @@ void stopConveyorsAndDigger(){
 	turnMotorOff(DiggerMotor);
 }
 void startConveyors(){
-	turnMotorOff(Con1);
-	turnMotorOff(Con2);
-	turnMotorOff(Con3);
-	turnMotorOff(Con4);
-	turnMotorOff(Con5);
+	turnMotorOn(Con1);
+	turnMotorOn(Con2);
+	turnMotorOn(Con3);
+	turnMotorOn(Con4);
+	turnMotorOn(Con5);
 }
 void startConveyorsAndDigger(){
 	stopConveyors();

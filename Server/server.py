@@ -109,7 +109,7 @@ def getSerialPortname():
 # Global Variables
 programOn = True
 #Server Port
-serverIP = 'localhost' # port address
+serverIP = '192.168.1.3' # port address
 serverPort = 7012 # port number
 serverBuffer = 24 # bytes
 #Create Listening Port
@@ -117,7 +117,7 @@ serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serverAddress = (serverIP, serverPort)
 serverSocket.bind(serverAddress)
 serverSocket.setblocking(1)
-serverSocket.listen(2)
+serverSocket.listen(1)
 #TEst
 print getSerialPortname()
 #Serial Port Configured Microcontroller(Arduino) to Host
@@ -127,13 +127,16 @@ BaudRate = 9600
 #Non-Blocking Serial Port Configured
 microController = serial.Serial(serialPort,BaudRate,timeout=0.05)
 ###	I/O Streams	###
-inputStreams = [serverSocket,microController,sys.stdin]
+inputStreams = [microController,sys.stdin]
 ###	Control Loop	###
 while programOn:
+	client = serverSocket.accept()
+	cli_soc, cli_addr = client
 	(inStream,outStream,errorStream) = select.select(inputStreams, [], [])
 	threads = []
+	inStream[2] = cli_soc
 	for dataS in inStream:
-		if dataS == serverSocket:
+		if dataS == cli_soc:
 			commands = serverSocket.recv(serverBuffer).split()
                         for cmd in commands:
 				if not parseCommand(microController,cmd):

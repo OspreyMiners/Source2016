@@ -23,6 +23,7 @@ Forwards the Command as long as it is not something
 the Server has to handle
 '''
 def parseCommand(serialPort,command):
+	print 'got Command'+command
 	if (command and (not command.isspace())):
 		if command[0] == 'O':
 			print "Shutting Off"
@@ -109,17 +110,13 @@ def getSerialPortname():
 # Global Variables
 programOn = True
 #Server Port
-serverIP = '192.168.1.3' # port address
+serverIP = '192.168.0.123' # port address
 serverPort = 7012 # port number
 serverBuffer = 24 # bytes
 #Create Listening Port
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serverAddress = (serverIP, serverPort)
 serverSocket.bind(serverAddress)
-serverSocket.setblocking(1)
-serverSocket.listen(1)
-#TEst
-print getSerialPortname()
 #Serial Port Configured Microcontroller(Arduino) to Host
 serialPort = getSerialPortname()
 serialBuffer = 64 #bytes
@@ -127,28 +124,29 @@ BaudRate = 9600
 #Non-Blocking Serial Port Configured
 microController = serial.Serial(serialPort,BaudRate,timeout=0.05)
 ###	I/O Streams	###
-inputStreams = [microController,sys.stdin]
+inputStreams = [serverSocket,microController,sys.stdin]
 ###	Control Loop	###
 while programOn:
-	client = serverSocket.accept()
-	cli_soc, cli_addr = client
-	(inStream,outStream,errorStream) = select.select(inputStreams, [], [])
-	threads = []
-	inStream[2] = cli_soc
+	client = None
+	client_address = None
+	(inStream,outStream,errorStream) = select.select(inputStreams, [], [],.75)
 	for dataS in inStream:
-		if dataS == cli_soc:
-			commands = serverSocket.recv(serverBuffer).split()
-                        for cmd in commands:
-				if not parseCommand(microController,cmd):
-					programOn = False
+		if dataS == serverSocket:
+			client , client_address = serverSocket.accept()
+			client.setblocking(0)
+			inStreams.append(client)
 		elif dataS == sys.stdin:
 			commands = sys.stdin.readline().split()
 			for cmd in commands:
 				if not parseCommand(microController,cmd):
 					programOn = False
 		elif dataS == microController:
-			data = microController.read(serialBuffer).replace('\n','').replace('\r','')
-	#		print data
+			data = microController.read(serialBufferSize).replace('\n','').replace('\r','')
 			parseFeedback(data)
 			microController.flushInput()
+		else :
+			commands = dataS.recv(serverBufferSize).split()
+			for cmd in commands:
+				if not parseCommand(microController,cmd):
+					programOn = False
 ###	MAIN END	###

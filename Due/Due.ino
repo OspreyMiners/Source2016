@@ -24,8 +24,8 @@ struct BiMotor RackPinionMotor = {42,43};
 //Digger Motor
 int DiggerMotor = 46;
 // PWM Drive Pins
-int rightPwmPin = 8;
-int leftPwmPin = 7;
+int rightPwmPin = 7;
+int leftPwmPin = 6;
 // Input
 // Current sensor feedback
 int CurrentDig = A6;
